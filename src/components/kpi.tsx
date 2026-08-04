@@ -13,11 +13,11 @@ export function KpiCard({
 }: {
   label: string;
   value: string;
-  delta?: number;
+  delta?: number | undefined;
   icon: LucideIcon;
-  tone?: "neutral" | "positive" | "negative" | "warning";
-  footer?: ReactNode;
-  onClick?: () => void;
+  tone?: "neutral" | "positive" | "negative" | "warning" | undefined;
+  footer?: ReactNode | undefined;
+  onClick?: (() => void) | undefined;
 }) {
   const toneClass = {
     neutral: "text-primary bg-primary-soft",
