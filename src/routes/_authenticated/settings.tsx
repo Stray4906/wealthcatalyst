@@ -16,7 +16,6 @@ import { PageHeader } from "@/components/app-shell";
 import { GlassPanel } from "@/components/kpi";
 import { useSnapshot, useUpsertRow } from "@/lib/queries";
 import { clearAllData } from "@/lib/seed";
-import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -81,9 +80,7 @@ function SettingsPage() {
   }
 
   async function reset() {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) return;
-    await clearAllData(data.user.id);
+    await clearAllData();
     await queryClient.invalidateQueries();
     toast.success("All financial data cleared");
   }

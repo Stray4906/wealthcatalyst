@@ -1,5 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
   ArrowRight,
@@ -12,7 +11,6 @@ import {
   Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-cfo.jpg";
 
 export const Route = createFileRoute("/")({
@@ -69,20 +67,6 @@ const AGENTS = [
 ];
 
 function Landing() {
-  const navigate = useNavigate();
-  const [checked, setChecked] = useState(false);
-
-  useEffect(() => {
-    void supabase.auth.getSession().then(({ data }) => {
-      if (data.session) void navigate({ to: "/dashboard", replace: true });
-      else setChecked(true);
-    });
-  }, [navigate]);
-
-  if (!checked) {
-    return <div className="min-h-screen canvas-gradient" />;
-  }
-
   return (
     <div className="min-h-screen canvas-gradient">
       <header className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between px-5">
@@ -92,8 +76,8 @@ function Landing() {
           </span>
           <span className="text-[17px] font-bold tracking-tight">CFO.ai</span>
         </div>
-        <Link to="/auth">
-          <Button variant="outline">Sign in</Button>
+        <Link to="/dashboard">
+          <Button variant="outline">Open dashboard</Button>
         </Link>
       </header>
 
@@ -112,14 +96,14 @@ function Landing() {
               language, whenever you ask.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/auth">
+              <Link to="/dashboard">
                 <Button size="lg" className="gap-2">
-                  Start free <ArrowRight className="size-4" />
+                  Open dashboard <ArrowRight className="size-4" />
                 </Button>
               </Link>
-              <Link to="/auth">
+              <Link to="/chat">
                 <Button size="lg" variant="outline">
-                  See a demo company
+                  Ask the AI CFO
                 </Button>
               </Link>
             </div>
@@ -176,9 +160,9 @@ function Landing() {
               Load the built-in demo company and explore a fully populated CFO dashboard in seconds.
             </p>
           </div>
-          <Link to="/auth">
+          <Link to="/dashboard">
             <Button size="lg" className="gap-2">
-              Create your account <ArrowRight className="size-4" />
+              Open dashboard <ArrowRight className="size-4" />
             </Button>
           </Link>
         </section>

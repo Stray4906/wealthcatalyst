@@ -38,7 +38,6 @@ import { PageHeader } from "@/components/app-shell";
 import { AgentBadge, GlassPanel, KpiCard } from "@/components/kpi";
 import { useSnapshot } from "@/lib/queries";
 import { seedDemoData } from "@/lib/seed";
-import { supabase } from "@/integrations/supabase/client";
 import {
   advisorAgent,
   cashFlowAgent,
@@ -102,9 +101,7 @@ function Dashboard() {
   async function loadDemo() {
     setSeeding(true);
     try {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) throw new Error("Not signed in");
-      await seedDemoData(data.user.id);
+      await seedDemoData();
       await refetch();
       toast.success("Demo company loaded — 18 months of financial history");
     } catch (error) {

@@ -44,7 +44,9 @@ function iso(date: Date) {
 }
 
 /** Seeds 18 months of realistic operating data so every agent has signal. */
-export async function seedDemoData(userId: string) {
+const userId = "local-user";
+
+export async function seedDemoData() {
   await db.from("business_profiles").upsert(
     {
       user_id: userId,
@@ -216,7 +218,7 @@ export async function seedDemoData(userId: string) {
   ]);
 }
 
-export async function clearAllData(userId: string) {
+export async function clearAllData() {
   const tables = [
     "incomes",
     "expenses",
