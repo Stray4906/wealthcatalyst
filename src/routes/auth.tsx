@@ -39,7 +39,10 @@ function AuthPage() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     void navigate({ to: "/dashboard", replace: true });
   }
 
@@ -54,7 +57,10 @@ function AuthPage() {
       },
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     if (data.session) void navigate({ to: "/dashboard", replace: true });
     else toast.success("Check your email to confirm your account.");
   }
@@ -63,7 +69,10 @@ function AuthPage() {
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
-    if (result.error) return toast.error("Google sign-in failed. Try email instead.");
+    if (result.error) {
+      toast.error("Google sign-in failed. Try email instead.");
+      return;
+    }
     if (result.redirected) return;
     void navigate({ to: "/dashboard", replace: true });
   }
