@@ -5,7 +5,6 @@ import {
   Building2,
   FileBarChart,
   LayoutDashboard,
-  LogOut,
   Menu,
   Moon,
   ReceiptText,
@@ -22,7 +21,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/theme-provider";
 import { useNotifications } from "@/lib/queries";
-import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -46,13 +44,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: notifications } = useNotifications();
   const unread = (notifications ?? []).filter((n) => !n.read).length;
-
-  async function signOut() {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    await supabase.auth.signOut();
-    void navigate({ to: "/auth", replace: true });
-  }
 
   return (
     <div className="min-h-screen canvas-gradient">
@@ -108,9 +99,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               Cash flow, expenses, invoices, health, tax, advisor and chat orchestration.
             </p>
           </div>
-          <Button variant="ghost" className="mt-2 w-full justify-start gap-3" onClick={signOut}>
-            <LogOut className="size-4" /> Sign out
-          </Button>
         </div>
       </aside>
 
