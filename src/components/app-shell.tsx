@@ -16,7 +16,6 @@ import {
   X,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/theme-provider";
@@ -39,7 +38,6 @@ const NAV = [
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const { theme, toggle } = useTheme();
-  const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: notifications } = useNotifications();
   const unread = (notifications ?? []).filter((n) => !n.read).length;
