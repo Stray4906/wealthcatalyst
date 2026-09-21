@@ -59,8 +59,7 @@ export const Route = createFileRoute("/api/chat")({
         ];
 
         if (geminiKey) {
-          const rawModel = process.env["AI_MODEL"] || "gemini-3.5-flash-lite";
-          const geminiModel = rawModel.includes("/") ? "gemini-3.5-flash-lite" : rawModel;
+          const geminiModel = process.env["AI_MODEL"] || "gemini-3.5-flash-lite";
           const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:streamGenerateContent?alt=sse&key=${geminiKey}`;
 
           // Format contents for Gemini API:

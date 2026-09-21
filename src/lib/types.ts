@@ -89,6 +89,7 @@ export type Snapshot = {
 };
 
 export const EXPENSE_CATEGORIES = [
+  // Generic
   "Payroll",
   "Rent",
   "Marketing",
@@ -99,13 +100,26 @@ export const EXPENSE_CATEGORIES = [
   "Professional Fees",
   "Logistics",
   "Miscellaneous",
+  // Banking / HDFC Bank specific
+  "IT & Technology",
+  "Credit Provisions",
+  "ATM Operations",
+  "Regulatory Compliance",
+  "Payment Processing",
 ];
 
 export const INCOME_CATEGORIES = [
+  // Generic
   "Product Sales",
   "Service Revenue",
   "Subscriptions",
   "Consulting",
   "Interest Income",
   "Other Income",
+  // Banking / HDFC Bank specific
+  "Net Interest Income",
+  "Fee & Commission Income",
+  "Treasury Income",
+  "Foreign Exchange Income",
+  "Bancassurance Income",
 ];

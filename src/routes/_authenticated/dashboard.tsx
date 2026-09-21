@@ -103,9 +103,9 @@ function Dashboard() {
     try {
       await seedDemoData();
       await refetch();
-      toast.success("Demo company loaded — 18 months of financial history");
+      toast.success("HDFC Bank dataset loaded — 18 months of real-world banking financials");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not load demo data");
+      toast.error(error instanceof Error ? error.message : "Could not load HDFC Bank data");
     } finally {
       setSeeding(false);
     }
@@ -147,7 +147,7 @@ function Dashboard() {
         description="Six specialist agents analysed your books just now. Here's where you stand."
         action={
           <Button variant="outline" className="gap-2" onClick={loadDemo} disabled={seeding}>
-            <Database className="size-4" /> {seeding ? "Loading…" : "Load demo company"}
+            <Database className="size-4" /> {seeding ? "Loading…" : "Load HDFC Bank data"}
           </Button>
         }
       />
@@ -157,12 +157,12 @@ function Dashboard() {
           <div>
             <p className="text-sm font-semibold">No financial data yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Add income and expenses, or load a realistic 18-month demo company to explore every
-              agent.
+              Add your own data, or load the <strong>HDFC Bank Ltd</strong> real-world dataset — 18
+              months of authentic banking P&amp;L data to explore every agent.
             </p>
           </div>
           <Button onClick={loadDemo} disabled={seeding} className="gap-2">
-            <Database className="size-4" /> Load demo company
+            <Database className="size-4" /> Load HDFC Bank data
           </Button>
         </div>
       )}
