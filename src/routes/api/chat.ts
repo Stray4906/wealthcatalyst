@@ -29,14 +29,14 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const openrouterKey = process.env["OPENROUTER_API_KEY"];
-        const openaiKey = process.env["OPENAI_API_KEY"];
-        const geminiKey = process.env["GEMINI_API_KEY"];
-        const lovableKey = process.env["LOVABLE_API_KEY"];
+        const geminiKey = process.env["GEMINI_API_KEY"] || (import.meta as any).env?.GEMINI_API_KEY;
+        const openrouterKey = process.env["OPENROUTER_API_KEY"] || (import.meta as any).env?.OPENROUTER_API_KEY;
+        const openaiKey = process.env["OPENAI_API_KEY"] || (import.meta as any).env?.OPENAI_API_KEY;
+        const lovableKey = process.env["LOVABLE_API_KEY"] || (import.meta as any).env?.LOVABLE_API_KEY;
 
         if (!openrouterKey && !openaiKey && !geminiKey && !lovableKey) {
           return new Response(
-            "AI is not configured. Please set OPENROUTER_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, or LOVABLE_API_KEY in your environment variables.",
+            `AI is not configured. (Available env keys: ${Object.keys(process.env).filter(k => k.includes("API") || k.includes("KEY")).join(", ") || "none"})`,
             { status: 500 }
           );
         }
@@ -59,7 +59,8 @@ export const Route = createFileRoute("/api/chat")({
         ];
 
         if (geminiKey) {
-          const geminiModel = process.env["AI_MODEL"] || "gemini-3.6-flash";
+          const rawModel = process.env["AI_MODEL"] || "gemini-3.5-flash-lite";
+          const geminiModel = rawModel.includes("/") ? "gemini-3.5-flash-lite" : rawModel;
           const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:streamGenerateContent?alt=sse&key=${geminiKey}`;
 
           // Format contents for Gemini API:
@@ -89,8 +90,8 @@ export const Route = createFileRoute("/api/chat")({
 
           if (!upstream.ok || !upstream.body) {
             const detail = await upstream.text();
-            console.error(`Gemini API error [${upstream.status}]: ${detail}`);
-            return new Response("The AI CFO could not respond right now.", { status: upstream.status });
+            console.error(`Gemini API error [${upstream.status}] at ${geminiUrl.replace(geminiKey, "REDACTED")}: ${detail}`);
+            return new Response(`AI service error (${upstream.status}): ${detail}`, { status: upstream.status });
           }
 
           // Transform Gemini SSE stream into OpenAI-compatible delta format expected by the frontend

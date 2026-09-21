@@ -5,6 +5,15 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { loadEnv } from "vite";
+
+// Explicitly populate process.env from .env file so Vite dev server handlers have access to server-side keys
+const env = loadEnv("development", process.cwd(), "");
+for (const [key, value] of Object.entries(env)) {
+  if (!(key in process.env)) {
+    process.env[key] = value;
+  }
+}
 
 // Detect preset from environment:
 // If building on Vercel (process.env.VERCEL is set) or NITRO_PRESET is specified, use that preset.
