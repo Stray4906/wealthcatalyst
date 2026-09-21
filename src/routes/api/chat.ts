@@ -58,26 +58,110 @@ export const Route = createFileRoute("/api/chat")({
           ...messages,
         ];
 
+        if (geminiKey) {
+          const geminiModel = process.env["AI_MODEL"] || "gemini-3.6-flash";
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:streamGenerateContent?alt=sse&key=${geminiKey}`;
+
+          // Format contents for Gemini API:
+          // System prompt as systemInstruction, and user/assistant messages as contents
+          const contents = messages.map((m) => ({
+            role: m.role === "assistant" ? "model" : "user",
+            parts: [{ text: m.content }],
+          }));
+
+          const geminiPayload = {
+            systemInstruction: {
+              parts: [
+                { text: SYSTEM },
+                { text: `LIVE AGENT BRIEFING (JSON):\n${JSON.stringify(briefing)}` },
+              ],
+            },
+            contents,
+          };
+
+          const upstream = await fetch(geminiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(geminiPayload),
+          });
+
+          if (!upstream.ok || !upstream.body) {
+            const detail = await upstream.text();
+            console.error(`Gemini API error [${upstream.status}]: ${detail}`);
+            return new Response("The AI CFO could not respond right now.", { status: upstream.status });
+          }
+
+          // Transform Gemini SSE stream into OpenAI-compatible delta format expected by the frontend
+          const reader = upstream.body.getReader();
+          const decoder = new TextDecoder();
+          const encoder = new TextEncoder();
+
+          const stream = new ReadableStream({
+            async start(controller) {
+              let buffer = "";
+              try {
+                for (;;) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+                  buffer += decoder.decode(value, { stream: true });
+                  const lines = buffer.split("\n");
+                  buffer = lines.pop() ?? "";
+
+                  for (const line of lines) {
+                    if (!line.startsWith("data: ")) continue;
+                    const jsonStr = line.slice(6).trim();
+                    if (!jsonStr) continue;
+
+                    try {
+                      const parsed = JSON.parse(jsonStr);
+                      const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+                      if (text) {
+                        const openAiChunk = `data: ${JSON.stringify({
+                          choices: [{ delta: { content: text } }],
+                        })}\n\n`;
+                        controller.enqueue(encoder.encode(openAiChunk));
+                      }
+                    } catch {
+                      // ignore json parse error for partial lines
+                    }
+                  }
+                }
+                controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+              } catch (err) {
+                controller.error(err);
+              } finally {
+                controller.close();
+              }
+            },
+          });
+
+          return new Response(stream, {
+            headers: {
+              "Content-Type": "text/event-stream",
+              "Cache-Control": "no-cache",
+              Connection: "keep-alive",
+            },
+          });
+        }
+
         let endpoint = "https://openrouter.ai/api/v1/chat/completions";
         let headers: Record<string, string> = {
           "Content-Type": "application/json",
         };
-        let model = "google/gemini-2.5-flash";
+        let model = "google/gemma-4-31b-it:free";
 
         if (openrouterKey) {
           endpoint = "https://openrouter.ai/api/v1/chat/completions";
           headers["Authorization"] = `Bearer ${openrouterKey}`;
           headers["HTTP-Referer"] = "https://cfo.ai";
           headers["X-Title"] = "CFO.ai";
-          model = process.env["AI_MODEL"] || "google/gemini-2.5-flash";
+          model = process.env["AI_MODEL"] || "google/gemma-4-31b-it:free";
         } else if (openaiKey) {
           endpoint = "https://api.openai.com/v1/chat/completions";
           headers["Authorization"] = `Bearer ${openaiKey}`;
           model = process.env["AI_MODEL"] || "gpt-4o-mini";
-        } else if (geminiKey) {
-          endpoint = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
-          headers["Authorization"] = `Bearer ${geminiKey}`;
-          model = process.env["AI_MODEL"] || "gemini-2.5-flash";
         } else if (lovableKey) {
           endpoint = "https://ai.gateway.lovable.dev/v1/chat/completions";
           headers["Lovable-API-Key"] = lovableKey;
