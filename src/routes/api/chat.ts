@@ -29,8 +29,17 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env["LOVABLE_API_KEY"];
-        if (!apiKey) return new Response("AI is not configured", { status: 500 });
+        const openrouterKey = process.env["OPENROUTER_API_KEY"];
+        const openaiKey = process.env["OPENAI_API_KEY"];
+        const geminiKey = process.env["GEMINI_API_KEY"];
+        const lovableKey = process.env["LOVABLE_API_KEY"];
+
+        if (!openrouterKey && !openaiKey && !geminiKey && !lovableKey) {
+          return new Response(
+            "AI is not configured. Please set OPENROUTER_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, or LOVABLE_API_KEY in your environment variables.",
+            { status: 500 }
+          );
+        }
 
         const body = (await request.json()) as ChatBody;
         const messages = Array.isArray(body.messages) ? body.messages.slice(-14) : [];
@@ -40,24 +49,49 @@ export const Route = createFileRoute("/api/chat")({
           ? buildAgentBriefing(body.snapshot)
           : { note: "No financial data recorded yet." };
 
-        const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Lovable-API-Key": apiKey,
-            "X-Lovable-AIG-SDK": "fetch",
+        const fullMessages = [
+          { role: "system", content: SYSTEM },
+          {
+            role: "system",
+            content: `LIVE AGENT BRIEFING (JSON):\n${JSON.stringify(briefing)}`,
           },
+          ...messages,
+        ];
+
+        let endpoint = "https://openrouter.ai/api/v1/chat/completions";
+        let headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        let model = "google/gemini-2.5-flash";
+
+        if (openrouterKey) {
+          endpoint = "https://openrouter.ai/api/v1/chat/completions";
+          headers["Authorization"] = `Bearer ${openrouterKey}`;
+          headers["HTTP-Referer"] = "https://cfo.ai";
+          headers["X-Title"] = "CFO.ai";
+          model = process.env["AI_MODEL"] || "google/gemini-2.5-flash";
+        } else if (openaiKey) {
+          endpoint = "https://api.openai.com/v1/chat/completions";
+          headers["Authorization"] = `Bearer ${openaiKey}`;
+          model = process.env["AI_MODEL"] || "gpt-4o-mini";
+        } else if (geminiKey) {
+          endpoint = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
+          headers["Authorization"] = `Bearer ${geminiKey}`;
+          model = process.env["AI_MODEL"] || "gemini-2.5-flash";
+        } else if (lovableKey) {
+          endpoint = "https://ai.gateway.lovable.dev/v1/chat/completions";
+          headers["Lovable-API-Key"] = lovableKey;
+          headers["X-Lovable-AIG-SDK"] = "fetch";
+          model = process.env["AI_MODEL"] || "google/gemini-2.5-flash";
+        }
+
+        const upstream = await fetch(endpoint, {
+          method: "POST",
+          headers,
           body: JSON.stringify({
-            model: "google/gemini-3.6-flash",
+            model,
             stream: true,
-            messages: [
-              { role: "system", content: SYSTEM },
-              {
-                role: "system",
-                content: `LIVE AGENT BRIEFING (JSON):\n${JSON.stringify(briefing)}`,
-              },
-              ...messages,
-            ],
+            messages: fullMessages,
           }),
         });
 
